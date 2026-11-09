@@ -1,0 +1,8 @@
+{
+  "_info": "Copy to tones.json (vk voice-setup fills it in). Each tone = a reference clip of your voice + \"text\", exactly what is said in it. The clone copies each clip's tone, pace and accent. Optional: \"temperature\" (default 0.9, lower = steadier).",
+  "me": {
+    "energia":  { "ref": "voices/me_energia.wav",  "text": "" },
+    "narracao": { "ref": "voices/me_narracao.wav", "text": "" },
+    "explica":  { "ref": "voices/me_explica.wav",  "text": "" }
+  }
+}

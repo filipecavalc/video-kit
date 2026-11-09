@@ -1,0 +1,50 @@
+{
+  "format": ["4x5", "9x16"],
+  "style": "clean",
+  "fps": 30,
+  "target": 25,
+  "language": "en",
+  "brand": { "accent": "#F5A524", "handle": "video-kit example" },
+  "voice": { "engine": "kokoro", "voice": "af_heart", "speed": 1.0 },
+  "captions": true,
+  "music": {
+    "generate": {
+      "caption": "warm acoustic instrumental, soft piano, light brushed drums, optimistic, background music for a video, no vocals",
+      "bpm": 85,
+      "seed": 2
+    },
+    "volume": 0.18,
+    "duck": 0.06
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "card": { "title": "Videos from a script", "subtitle": "narration, captions and music, all local" },
+      "say": "This whole video was generated from one script file.",
+      "min": 3
+    },
+    {
+      "id": "chat",
+      "chat": {
+        "messages": [
+          { "role": "user", "text": "Make a 25 second video explaining how this kit works." },
+          { "role": "assistant", "text": "Script written: five scenes, narration, a diagram and an end card." }
+        ]
+      },
+      "say": "You describe the video. The script lists the scenes, what is said and what is shown.",
+      "captions": true
+    },
+    {
+      "id": "flow",
+      "manim": "manim/flow.py:Flow",
+      "say": "Each step runs locally: voice, captions, music, then the render."
+    },
+    {
+      "id": "end",
+      "card": { "title": "video-kit", "subtitle": "Remotion · Kokoro · Whisper · ACE-Step", "footer": "vk build example" },
+      "say": "Then one command renders it all.",
+      "captions": false,
+      "min": 3
+    }
+  ]
+}

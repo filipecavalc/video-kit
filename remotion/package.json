@@ -1,0 +1,30 @@
+{
+  "name": "video-kit-remotion",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Data-driven video templates (render props come from the pipeline's timeline.json)",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.3.0",
+    "@remotion/captions": "4.0.541",
+    "@remotion/cli": "4.0.541",
+    "@remotion/effects": "4.0.541",
+    "@remotion/google-fonts": "4.0.541",
+    "@remotion/media": "4.0.541",
+    "@remotion/media-utils": "4.0.541",
+    "@remotion/three": "4.0.541",
+    "@remotion/transitions": "4.0.541",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "4.0.541",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/three": "0.180.0",
+    "typescript": "^5.9.0"
+  }
+}

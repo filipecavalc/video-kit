@@ -1,0 +1,27 @@
+# Installed / downloaded by setup.ps1
+.uv-cache/
+models/
+tools/
+remotion/node_modules/
+py/*/.venv/
+__pycache__/
+*.pyc
+
+# Everything personal lives in user/ and never leaves this machine:
+# profile, brand, voice samples (biometric), music, notes. user.example/ is the template.
+user/
+# Recordings put at the kit root by mistake (they belong in user/voices/raw/)
+/voices/
+
+# Projects: only the example projects are versioned, never build output or media
+projects/*
+!projects/README.md
+!projects/example/
+!projects/example-dev/
+projects/*/build/
+projects/*/out/
+
+# Scratch
+*.log
+.DS_Store
+Thumbs.db

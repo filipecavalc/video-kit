@@ -1,0 +1,384 @@
+{
+  "format": [
+    "4x5",
+    "16x9"
+  ],
+  "style": "tech",
+  "fps": 30,
+  "target": 75,
+  "language": "en",
+  "transition": "fade",
+  "brand": {
+    "accent": "#3DDC97",
+    "handle": "video-kit · developer example",
+    "logo": "assets/logo.svg"
+  },
+  "voice": {
+    "engine": "kokoro",
+    "voice": "am_michael",
+    "speed": 1.0
+  },
+  "captions": true,
+  "music": {
+    "generate": {
+      "caption": "minimal electronic instrumental, soft synth pads, steady light beat, focused and modern, tech product video background, no vocals",
+      "bpm": 100,
+      "seed": 1
+    },
+    "volume": 0.16,
+    "duck": 0.05
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "kinetic": {
+        "text": "Ship videos\nlike you ship code.",
+        "mark": [
+          "code."
+        ],
+        "sub": "one script, one command",
+        "logo": "assets/logo.svg"
+      },
+      "say": "What if making a video worked like shipping code?",
+      "voice": {
+        "speed": 0.95
+      }
+    },
+    {
+      "id": "terminal",
+      "transition": "push",
+      "terminal": {
+        "title": "PowerShell · video-kit",
+        "prompt": ">",
+        "lines": [
+          {
+            "cmd": "vk new launch-video",
+            "cue": "write"
+          },
+          {
+            "out": "Created projects/launch-video",
+            "color": "dim"
+          },
+          {
+            "cmd": "vk build launch-video --preview",
+            "cue": "run"
+          },
+          {
+            "stream": [
+              "[1/5] narration (kokoro)",
+              "  hook.wav",
+              "  terminal.wav",
+              "  diagram.wav",
+              "  code.wav",
+              "  diff.wav",
+              "[2/5] media and timing",
+              "[3/5] voice track and captions",
+              "[4/5] timeline: 9 scenes, 41.0s",
+              "[5/5] render"
+            ],
+            "for": 1.6,
+            "cue": "narrates"
+          },
+          {
+            "out": "rendered {n} frames",
+            "count": 1230,
+            "color": "dim"
+          },
+          {
+            "out": "-> out/launch-video-4x5-preview.mp4",
+            "color": "green"
+          }
+        ]
+      },
+      "say": "You write a script file and run one command. The kit narrates, captions, scores and renders it.",
+      "perspective": true
+    },
+    {
+      "id": "numbers",
+      "transition": "zoom",
+      "stats": {
+        "items": [
+          {
+            "value": 4,
+            "label": "formats from one build"
+          },
+          {
+            "value": 10,
+            "label": "narration languages"
+          }
+        ]
+      },
+      "say": "Four formats from one build, in ten languages."
+    },
+    {
+      "id": "pipeline",
+      "transition": "wipe",
+      "diagram": {
+        "title": "How it works",
+        "nodes": [
+          {
+            "id": "script",
+            "label": "script.json",
+            "sub": "scenes · words",
+            "icon": "📝"
+          },
+          {
+            "id": "voice",
+            "label": "Narration",
+            "sub": "Kokoro · your voice",
+            "icon": "🎙️"
+          },
+          {
+            "id": "music",
+            "label": "Soundtrack",
+            "sub": "ACE-Step",
+            "icon": "🎵"
+          },
+          {
+            "id": "captions",
+            "label": "Captions",
+            "sub": "Whisper",
+            "icon": "💬"
+          },
+          {
+            "id": "render",
+            "label": "Render",
+            "sub": "Remotion",
+            "icon": "🎬",
+            "accent": true
+          },
+          {
+            "id": "mp4",
+            "label": "MP4 + SRT",
+            "sub": "every format",
+            "icon": "📦"
+          }
+        ],
+        "edges": [
+          {
+            "from": "script",
+            "to": "voice"
+          },
+          {
+            "from": "script",
+            "to": "music"
+          },
+          {
+            "from": "voice",
+            "to": "captions"
+          },
+          {
+            "from": "captions",
+            "to": "render"
+          },
+          {
+            "from": "music",
+            "to": "render"
+          },
+          {
+            "from": "render",
+            "to": "mp4"
+          }
+        ],
+        "flows": [
+          {
+            "path": [
+              "script",
+              "voice",
+              "captions",
+              "render",
+              "mp4"
+            ],
+            "cue": "narration"
+          },
+          {
+            "path": [
+              "script",
+              "music",
+              "render",
+              "mp4"
+            ],
+            "cue": "soundtrack",
+            "color": "#61AFEF"
+          }
+        ]
+      },
+      "say": "Everything runs locally: narration, captions and a soundtrack at the exact length, then the render.",
+      "voice": {
+        "speed": 0.95
+      },
+      "leak": {}
+    },
+    {
+      "id": "code",
+      "transition": "through",
+      "code": {
+        "file": "code/retry_before.py",
+        "title": "report.py",
+        "focus": [
+          {
+            "lines": [
+              8,
+              13
+            ],
+            "cue": "retry"
+          },
+          {
+            "lines": [
+              10,
+              10
+            ],
+            "cue": "timeout"
+          }
+        ]
+      },
+      "say": "It shows code the way you would explain it. This retry loop has no timeout, so one slow call hangs the job.",
+      "camera": [
+        {
+          "cue": "timeout",
+          "x": 0.52,
+          "y": 0.42,
+          "scale": 1.6,
+          "hold": 2.6,
+          "format": "4x5"
+        },
+        {
+          "cue": "timeout",
+          "x": 0.3,
+          "y": 0.5,
+          "scale": 1.5,
+          "hold": 2.6,
+          "format": "16x9"
+        }
+      ],
+      "annotate": [
+        {
+          "cue": "slow",
+          "type": "circle",
+          "x": 0.477,
+          "y": 0.403,
+          "w": 0.264,
+          "h": 0.025,
+          "format": "4x5"
+        },
+        {
+          "cue": "slow",
+          "type": "circle",
+          "x": 0.29,
+          "y": 0.49,
+          "w": 0.149,
+          "h": 0.03,
+          "format": "16x9"
+        }
+      ]
+    },
+    {
+      "id": "fix",
+      "code": {
+        "before": "code/retry_before.py",
+        "after": "code/retry_after.py",
+        "title": "report.py · fix",
+        "turn": {
+          "cue": "timeout"
+        }
+      },
+      "badge": "Tests passing",
+      "say": "The fix: a timeout, a status check and exponential backoff."
+    },
+    {
+      "id": "demo",
+      "transition": "slide",
+      "media": "assets/demo.mp4",
+      "events": "assets/demo.events.json",
+      "headline": "Recorded by a script",
+      "say": "Web demos are recorded by a script, with zooms and clicks added for you.",
+      "camera": [
+        {
+          "at": 5.0,
+          "x": 0.78,
+          "y": 0.5,
+          "scale": 1.35
+        },
+        {
+          "at": 6.8,
+          "x": 0.3,
+          "y": 0.45,
+          "scale": 1.2,
+          "hold": 1.2
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "transition": "through",
+      "model": {
+        "src": "assets/desk.glb",
+        "el": 20,
+        "explode": {
+          "cue": "apart",
+          "amount": 0.8,
+          "hold": 3.2
+        },
+        "labels": [
+          {
+            "part": "Top",
+            "text": "Top",
+            "cue": "labels"
+          },
+          {
+            "part": "Leg_Front_Left",
+            "text": "Steel leg",
+            "cue": "labels"
+          },
+          {
+            "part": "Shelf",
+            "text": "Shelf",
+            "cue": "labels"
+          }
+        ],
+        "highlight": [
+          {
+            "part": "Shelf",
+            "cue": "shelf",
+            "hold": 1.5
+          }
+        ]
+      },
+      "say": "Projects with a 3D model get a turntable that pulls the parts apart, labels them, and can light up the shelf you are talking about."
+    },
+    {
+      "id": "history",
+      "transition": "zoom",
+      "git": {
+        "repo": "../..",
+        "title": "video-kit",
+        "highlights": 3
+      },
+      "say": "And the story comes straight from git."
+    },
+    {
+      "id": "end",
+      "transition": "zoom",
+      "card": {
+        "title": "video-kit",
+        "subtitle": "Videos from a script · runs on your machine",
+        "footer": "vk build example-dev"
+      },
+      "sfx": [
+        {
+          "name": "success-chime",
+          "at": 0.3,
+          "volume": 0.3
+        }
+      ],
+      "say": "Free, local, and yours to extend.",
+      "captions": false,
+      "min": 3.5
+    }
+  ],
+  "film": {
+    "grain": 0.06,
+    "vignette": 0.35
+  },
+  "caption_style": "pop"
+}

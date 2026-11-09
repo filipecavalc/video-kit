@@ -1,0 +1,33 @@
+{
+  "format": ["4x5", "9x16"],
+  "target": 60,
+  "fps": 30,
+  "captions": true,
+  "music": {
+    "generate": { "caption": "warm modern instrumental, soft piano, light beat, optimistic, background music for a video, no vocals", "bpm": 90, "seed": 1 },
+    "volume": 0.18,
+    "duck": 0.06
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "kinetic": { "text": "Your hook\nin a few words.", "mark": ["hook"], "sub": "one line on why it matters" },
+      "say": "One sentence that makes people stop scrolling."
+    },
+    {
+      "id": "demo",
+      "media": "assets/demo.mp4",
+      "trim": [0, 20],
+      "speed": 2,
+      "headline": "What it does",
+      "say": "Explain what is happening on screen."
+    },
+    {
+      "id": "end",
+      "card": { "title": "Your project", "subtitle": "Free and open source", "footer": "github.com/you/repo" },
+      "say": "Link in the comments.",
+      "captions": false,
+      "min": 4
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Your Name",
+  "speaker": "me",
+  "default_language": "en",
+  "languages": ["en"],
+  "style": "clean",
+  "voice": { "engine": "kokoro", "voice": "af_heart", "speed": 1.0 },
+  "music": "generate",
+  "brand": {
+    "accent": "#F5A524",
+    "handle": "Your Name",
+    "logo": null
+  }
+}

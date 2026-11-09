@@ -1,0 +1,25 @@
+[project]
+name = "video-kit-qwen"
+version = "0.1.0"
+description = "Voice cloning narration (Qwen3-TTS) for the video kit"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    # Apache-2.0; pins transformers==4.57.3 and accelerate. Weights (Qwen/Qwen3-TTS-12Hz-1.7B-Base,
+    # ~4.5 GB) download into models/hf on the first narration.
+    "qwen-tts==0.1.1",
+    "torch",
+    "torchaudio",
+    "soundfile",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu124" }]
+torchaudio = [{ index = "pytorch-cu124" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true

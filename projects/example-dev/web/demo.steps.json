@@ -1,0 +1,13 @@
+{
+  "url": "web/index.html",
+  "size": [1600, 1000],
+  "steps": [
+    { "wait": 0.8 },
+    { "type": ["#url", "https://api.example.com/report"] },
+    { "wait": 0.4 },
+    { "click": "#run" },
+    { "wait": 1.6 },
+    { "hover": "#bars" },
+    { "wait": 1.2 }
+  ]
+}

@@ -1,0 +1,33 @@
+[project]
+name = "video-kit-main"
+version = "0.1.0"
+description = "Narration (Kokoro), captions (Whisper) and Manim for the video kit"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "torch>=2.7",
+    "torchaudio>=2.7",
+    "kokoro>=0.9.4",
+    "soundfile",
+    "numpy",
+    "openai-whisper",
+    "manim",
+    "pymupdf",
+    "pygments",
+    "librosa",
+    "playwright",
+    # Kokoro's English phonemizer (misaki) needs this spaCy model; installing it here avoids
+    # misaki trying to download it at runtime with `uv pip` outside the venv.
+    "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu126" }]
+torchaudio = [{ index = "pytorch-cu126" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
