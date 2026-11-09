@@ -1,7 +1,7 @@
 {
   "name": "video-kit-remotion",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.6.2",
   "description": "Data-driven video templates (render props come from the pipeline's timeline.json)",
   "scripts": {
     "studio": "remotion studio src/index.ts",

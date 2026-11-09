@@ -1,7 +1,8 @@
 # video-kit
 
-Turns a `script.json` into a finished, narrated, captioned video, locally and for free. Built to be
-driven by Claude Code; every step is also a plain command (`vk ...`).
+Turns a `script.json` into a finished, narrated, captioned video on your own machine, with no paid APIs.
+Windows 10/11. Built to be driven by Claude Code; every step is also a plain command (`vk ...`; in
+PowerShell, `.\vk ...`).
 
 **First run:** if `user/profile.json` does not exist, use the `kit-setup` skill before anything else.
 **Making a video:** use the `video-kit` skill (script first, approval, then render).
@@ -42,7 +43,7 @@ projects/example*/        versioned examples; other projects stay local
 
 ```
 vk new <p>                      project from the template
-vk check <p>                    missing media, words, estimated length vs "target"
+vk check <p>                    missing files (media, models, code, logos, music), words, length vs "target"
 vk build <p> [--preview] [--format 4x5,9x16] [--placeholders] [--gif] [--no-render]
 vk sheet <p> [--preview] [--every 2]     contact sheet with timestamps: read it before delivering
 vk qa <p> [--preview]           speech match, pace, loudness, black/frozen frames, still picture, length
@@ -76,21 +77,25 @@ Top level (the person's `user/profile.json` fills brand, voice, language and sty
   "caption_style": "pop",          // box | plain | pill | pop (default: the style's own)
   "music": { "generate": { "caption": "warm acoustic ... no vocals", "bpm": 85, "seed": 1, "variants": [2, 3] },
              "volume": 0.18, "duck": 0.06 },
-  //   or { "file": "music/track.mp3", ... }   (user/music/ or the project)
+  //   generate also takes key, steps, model, lm, thinking, fade_in, fade_out (pipeline/build.py stage_music)
+  //   or { "file": "music/track.mp3", ... }   (user/music/ or the project); with both, "file" is the
+  //   fallback when generation is not available (no ACE-Step or no NVIDIA GPU); with neither, no music
   "beat_sync": true,               // slideshow switches without a cue snap to the beat
   "film": { "grain": 0.06, "vignette": 0.35 },
   "transition": "fade",            // default for every scene: fade | slide | wipe | zoom | cut | push | through | flip
                                    // (push, through and flip move both scenes: a camera pan, a fly-through, a card flip)
   "perspective": true,             // terminal and code windows float in 3D (per scene too)
   "background": "grid",            // living backdrop behind non-media scenes: plain | glow | grid | dots (default: the style's; per scene too)
-  "lead": 0.25, "tail": 0.45, "fade": 10,
+  "lead": 0.25, "tail": 0.45, "fade": 10, "fps": 30,
+  "whisper": "turbo", "align": true,  // caption model; align heard words to the script's spelling
   "scenes": [ ... ]
 }
 ```
 
 Every scene: `id`, `say` (narration), `voice` (tone name or object), `min` / `duration`, `transition`,
-`headline` / `sub`, `label`, `badge`, `captions: false`, `sfx: [{"name", "cue"|"at", "volume"}]`,
-`leak: {}` (light leak over the cut), `cover: true` (cover frame; or seconds into the scene, e.g. `cover: 3.5`).
+`captions: false`, `sfx: [{"name", "cue"|"at", "volume"}]`, `auto_sfx: false` (no automatic whoosh or
+typing sound), `background`, `perspective`, `leak: {}` or `{"hue": 40}` (light leak over the cut),
+`label` / `badge` (chips; not on cards or chat), `headline` / `sub` (over media scenes only), `cover: true` (cover frame; or seconds into the scene, e.g. `cover: 3.5`).
 Any scene also takes `camera: [{cue|at, x, y, scale, hold}]` (punch-in that snaps and settles on a point;
 `hold` = seconds before easing back out) and `annotate: [{cue|at, type: circle/underline/box/strike/arrow/highlight,
 x, y, w, h, color, hold}]` (hand-drawn marks; arrow runs from x, y by w, h). Positions are fractions of the frame:
@@ -115,7 +120,8 @@ limit it to that format. In a slideshow they land on the image on screen at that
 | 3D model | `model: {src: "x.glb", az, el, spin (turns), zoom, edges, colors: {part: hex}, explode: {cue/at, amount, hold}, labels: [{part, text, cue/at, hold}], highlight: [{part, cue/at, hold, color}]}`: turntable, exploded view (the camera pulls back to keep it in frame), labels on leader lines that follow their parts, parts tinted on a word. Parts are the .glb's named nodes (a FreeCAD/Blender export names them) |
 | manim | `manim: "manim/file.py:SceneClass"` (use `vk_manim.fit_frame()` and `content_area()`) |
 
-Timing: a scene lasts the longest of `min`, its clip (after trim/speed) and its narration + lead + tail.
+Timing: a scene lasts the longest of `min`, its clip (after trim/speed), its natural length (a terminal's
+typing, a stats or 3D scene's animation) and its narration + lead + tail; `duration` overrides all of it.
 `cue` = a word in that scene's narration (Whisper timing); `at` = seconds from the scene start.
 Paths: relative to the project, the kit root or `user/`; absolute paths are copied in.
 

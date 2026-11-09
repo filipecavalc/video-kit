@@ -1,14 +1,22 @@
 """video-kit: script.json -> narration -> captions -> timeline -> MP4 (Remotion).
 
     vk new <project>                      create a project from the template
+    vk check <project>                    missing files, words per scene, estimated length vs "target"
     vk build <project> [options]          run everything that changed and render
         --format 4x5,9x16                 override the formats in script.json
         --preview                         half resolution, fast check
         --no-render                       stop after timeline.json
+        --placeholders                    grey cards for media still to be provided
         --gif                             also export a GIF (for READMEs)
+    vk sheet <project> [--preview] [--every 2] [--format F]   contact sheet with timestamps
+    vk qa <project> [--preview] [--format F]                  checks on the rendered video
     vk still <project> [--frame N | --at SECONDS] [--format F] [--grid]
     vk studio <project> [--format F]      open the Remotion Studio on this project
     vk voices                             list Kokoro voices
+    vk voice-setup [--dry-run] [--redo [tone ...]] [--speaker NAME]   voice samples -> clone tones
+    vk cut <video> [--punch]              remove silences from a talking-head take
+    vk transcribe <video>                 transcript with timestamps
+    vk capture <steps.json> [--out F]     record a scripted browser session with click events
 
 Projects live in video-kit/projects/<name>/ (or pass a path). Every path inside script.json
 is relative to the project folder. Outputs go to <project>/out/, intermediates to <project>/build/.
@@ -60,7 +68,7 @@ def project_dir(name: str) -> Path:
 
 def load_cache(build: Path) -> dict:
     f = build / "cache.json"
-    return json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+    return json.loads(f.read_text(encoding="utf-8-sig")) if f.exists() else {}
 
 
 def save_cache(build: Path, cache: dict) -> None:
@@ -144,7 +152,7 @@ def stage_voice(root: Path, spec: dict, scenes: list[dict], cache: dict) -> dict
         return text
 
     tones_file = kit.USER_VOICES / "tones.json"
-    tones = json.loads(tones_file.read_text(encoding="utf-8")) if tones_file.exists() else {}
+    tones = json.loads(tones_file.read_text(encoding="utf-8-sig")) if tones_file.exists() else {}
     default_speaker = kit.profile().get("speaker", "me")
     warned: list[bool] = []
 
@@ -361,7 +369,15 @@ def dev_scene_data(root: Path, kind: str, s: dict, local) -> dict:
                             "autoOrient": d.get("vertical") is None, **({"ambient": False} if d.get("ambient") is False else {})}}
     if kind == "git":
         repo = resolve_in(root, d["repo"])
-        data = devscenes.git_history(repo, d.get("since"), d.get("until"), d.get("path"))
+        try:
+            data = devscenes.git_history(repo, d.get("since"), d.get("until"), d.get("path"))
+        except RuntimeError as e:
+            # No history to show (a downloaded zip has no .git): a title takes the scene's place.
+            kit.log(f"  ! scene '{s['id']}': {e}; showing a title instead")
+            return {"kind": "title", "kinetic": {"text": d.get("title") or "git history"}}
+        if not data["commits"]:
+            kit.log(f"  ! scene '{s['id']}': no commits in that range; showing a title instead")
+            return {"kind": "title", "kinetic": {"text": d.get("title") or "git history"}}
         n = int(d.get("highlights", 4))
         commits = data["commits"]
         # Highlights: the biggest commits, shown in time order; or the ones named in "pick" (substring match).
@@ -432,7 +448,7 @@ def time_screen_polish(root: Path, placed: list, timeline_scenes: list, words: l
 
         zooms, clicks = list(s.get("zoom", [])), list(s.get("clicks", []))
         if s.get("events"):
-            ev = json.loads(resolve_in(root, s["events"]).read_text(encoding="utf-8"))
+            ev = json.loads(resolve_in(root, s["events"]).read_text(encoding="utf-8-sig"))
             for e in ev.get("clicks", []):
                 t = (float(e["t"]) - trim0) / speed
                 if 0 <= t <= length:
@@ -617,7 +633,7 @@ def sfx_peak(path: Path) -> float:
 
 
 def place_sfx(root: Path, placed: list, words: list[dict], fps: int, default_tr: str = "fade") -> list[dict]:
-    """Sound effects: per scene {"name", "cue" | "at", "volume"}, plus a whoosh on slide/wipe transitions.
+    """Sound effects: per scene {"name", "cue" | "at", "volume"}, plus a whoosh on slide, wipe, push, through and flip transitions.
 
     Mixing rules: a sound's loudest point lands one frame after the picture event (the ear reads that as
     in sync); generic names ("whoosh", "pop", "click", "paper") rotate through takes.
@@ -687,15 +703,30 @@ def beat_sync(placed: list, timeline_scenes: list, music: Path, fps: int, window
     return moved
 
 
+ACE_PY = kit.KIT / "tools" / "ACE-Step-1.5" / ".venv" / "Scripts" / "python.exe"
+
+
+def music_generation_unavailable() -> str | None:
+    """Why ACE-Step cannot generate here (None when it can): not installed, or no NVIDIA GPU."""
+    if not ACE_PY.exists():
+        return "ACE-Step is not installed (setup.ps1 -Music generate)"
+    try:
+        import torch
+
+        if not torch.cuda.is_available():
+            return "music generation needs an NVIDIA GPU"
+    except ImportError:
+        pass
+    return None
+
+
 def stage_music(root: Path, gen: dict, total: float, cache: dict) -> Path:
     """Generate the soundtrack with ACE-Step at the video's exact length (cached by prompt + length).
 
     gen: {"caption": "...", "bpm": 85, "key": "", "seed": 1, "variants": [1, 2, 3], "model": ..., "lm": ...}
     "variants" renders several seeds into build/music/ to compare; "seed" picks the one used.
     """
-    ace_py = kit.KIT / "tools" / "ACE-Step-1.5" / ".venv" / "Scripts" / "python.exe"
-    if not ace_py.exists():
-        raise RuntimeError("ACE-Step is not installed: run `uv sync` in video-kit/tools/ACE-Step-1.5")
+    ace_py = ACE_PY
     duration = round(total + 1.0, 1)
     seed = int(gen.get("seed", 1))
     seeds = sorted({seed, *[int(x) for x in gen.get("variants", [])]})
@@ -760,7 +791,7 @@ def build(root: Path, formats: list[str] | None, preview: bool, render: bool, gi
     spec_file = root / "script.json"
     if not spec_file.exists():
         raise SystemExit(f"No script.json in {root}")
-    spec = with_profile(json.loads(spec_file.read_text(encoding="utf-8")))
+    spec = with_profile(json.loads(spec_file.read_text(encoding="utf-8-sig")))
     build_dir = root / "build"
     out_dir = root / "out"
     build_dir.mkdir(exist_ok=True)
@@ -998,12 +1029,12 @@ def build(root: Path, formats: list[str] | None, preview: bool, render: bool, gi
                     words = cap.align(words, script_text)
                 cfile.write_text(json.dumps(words, indent=1, ensure_ascii=False), encoding="utf-8")
                 cache["captions"] = ckey
-            words = json.loads(cfile.read_text(encoding="utf-8"))
+            words = json.loads(cfile.read_text(encoding="utf-8-sig"))
             timeline["captions"] = cap.to_remotion(words)
             (out_dir / f"{root.name}.srt").write_text(cap.to_srt(words), encoding="utf-8")
     save_cache(build_dir, cache)
 
-    spoken_words = json.loads((build_dir / "words.json").read_text(encoding="utf-8")) if (voice_clips and (build_dir / "words.json").exists()) else []
+    spoken_words = json.loads((build_dir / "words.json").read_text(encoding="utf-8-sig")) if (voice_clips and (build_dir / "words.json").exists()) else []
     sync_slideshows(placed, timeline_scenes, spoken_words, fps)
     time_dev_scenes(placed, timeline_scenes, spoken_words, fps)
     time_screen_polish(root, placed, timeline_scenes, spoken_words, fps)
@@ -1013,6 +1044,10 @@ def build(root: Path, formats: list[str] | None, preview: bool, render: bool, gi
         timeline["sfx"] = sfx
 
     music = spec.get("music")
+    if music and music.get("generate") and (why := music_generation_unavailable()):
+        # A file given next to "generate" is the fallback; otherwise the video is built without music.
+        kit.log(f"  ! {why}: " + ("using music.file instead" if music.get("file") else "building without music"))
+        music = {k: v for k, v in music.items() if k != "generate"}
     if music and music.get("generate"):
         dst = stage_music(root, music["generate"], total, cache)
         save_cache(build_dir, cache)
@@ -1118,9 +1153,16 @@ def still(root: Path, props: Path, out: Path, frame: int) -> None:
 WORDS_PER_SECOND = {"en": 2.5, "pt": 2.05}
 
 
+def find_file(root: Path, ref: str) -> bool:
+    """Same lookup as resolve_in (project, kit root, user/), without rendering PDF pages."""
+    path = ref.rsplit("#", 1)[0] if "#" in ref and ref.lower().split("#")[0].endswith(".pdf") else ref
+    p = Path(path)
+    return p.exists() if p.is_absolute() else any((base / path).exists() for base in (root, kit.KIT, kit.USER))
+
+
 def check(root: Path) -> None:
     """Pre-flight: every media file exists, narration length per scene and in total vs "target"."""
-    spec = with_profile(json.loads((root / "script.json").read_text(encoding="utf-8")))
+    spec = with_profile(json.loads((root / "script.json").read_text(encoding="utf-8-sig")))
     lead, tail = float(spec.get("lead", 0.25)), float(spec.get("tail", 0.45))
     wps = WORDS_PER_SECOND.get(spec.get("language", "en"), 2.3)
     problems, total = [], 0.0
@@ -1131,13 +1173,13 @@ def check(root: Path) -> None:
         est = words / wps + (lead + tail if words else 0)
         items = s.get("media") if isinstance(s.get("media"), list) else ([s["media"]] if s.get("media") else [])
         items += [img for m in (s.get("chat") or {}).get("messages", []) for img in m.get("images", [])]
-        missing = []
-        for m in items:
-            ref = m["src"] if isinstance(m, dict) else m
-            path, _, _ = ref.partition("#") if ref.lower().split("#")[0].endswith(".pdf") else (ref, "", "")
-            p = Path(path) if Path(path).is_absolute() else root / path
-            if not p.exists() and not (kit.KIT / path).exists():
-                missing.append(Path(path).name)
+        items += [v for v in ((s.get("kinetic") or {}).get("media"), (s.get("kinetic") or {}).get("logo"),
+                              (s.get("model") or {}).get("src"), s.get("events")) if v]
+        code = s.get("code") or {}
+        items += [v for v in (code.get("file"), code.get("before"), code.get("after")) if isinstance(v, str) and "\n" not in v and len(v) < 260]
+        if s.get("manim"):
+            items.append(s["manim"].split(":")[0])
+        missing = [Path(ref).name for ref in (m["src"] if isinstance(m, dict) else m for m in items) if not find_file(root, ref)]
         if "duration" in s:
             est = float(s["duration"])
         est = max(est, float(s.get("min", 0)))
@@ -1145,6 +1187,12 @@ def check(root: Path) -> None:
         note = f"MISSING: {', '.join(missing)}" if missing else f"{len(items)} file(s)" if items else ("card" if s.get("card") else "chat" if s.get("chat") else "")
         print(f"{sid:<14}{words:>6}{est:>7.1f}  {note}")
         problems += [f"{sid}: {m}" for m in missing]
+    mus = spec.get("music") or {}
+    if mus.get("file") and not find_file(root, mus["file"]):
+        problems.append(f"music: {mus['file']}")
+        print(f"music          MISSING: {mus['file']}")
+    if mus.get("generate") and (why := music_generation_unavailable()):
+        print(f"music          {why}: " + ("music.file will be used" if mus.get("file") else "the video will have no music"))
     print(f"\nestimated length (narration only; video clips may add): {total:.0f}s", end="")
     target = spec.get("target")
     if target:
@@ -1162,7 +1210,7 @@ def check(root: Path) -> None:
 def sheet(root: Path, fmt: str | None, every: float, preview: bool) -> Path:
     """Frames every N seconds tiled into one PNG, for a scene-by-scene review."""
     if not fmt:
-        spec = json.loads((root / "script.json").read_text(encoding="utf-8"))
+        spec = json.loads((root / "script.json").read_text(encoding="utf-8-sig"))
         f = spec.get("format", "4x5")
         fmt = f if isinstance(f, str) else f[0]
     video = root / "out" / f"{root.name}-{fmt}{'-preview' if preview else ''}.mp4"
@@ -1265,7 +1313,7 @@ def main() -> None:
 
     fmt = a.format
     if not fmt:
-        spec = json.loads((root / "script.json").read_text(encoding="utf-8"))
+        spec = json.loads((root / "script.json").read_text(encoding="utf-8-sig"))
         f = spec.get("format", "4x5")
         fmt = f if isinstance(f, str) else f[0]
     props = root / "build" / f"timeline-{fmt}.json"
@@ -1273,7 +1321,7 @@ def main() -> None:
         build(root, [fmt], False, False, False)
 
     if a.cmd == "still":
-        tl = json.loads(props.read_text(encoding="utf-8"))
+        tl = json.loads(props.read_text(encoding="utf-8-sig"))
         frame = a.frame if a.frame is not None else round((a.at or 0) * tl["fps"])
         out = root / "out" / f"still-{fmt}-{frame}.png"
         still(root, props, out, frame)

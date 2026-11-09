@@ -97,7 +97,7 @@ def capture(steps_file: Path, out: Path | None) -> Path:
     """
     from playwright.sync_api import sync_playwright
 
-    spec = json.loads(steps_file.read_text(encoding="utf-8"))
+    spec = json.loads(steps_file.read_text(encoding="utf-8-sig"))
     w, h = spec.get("size", [1920, 1080])
     url = spec["url"]
     if "://" not in url:  # a local file, relative to the steps file's folder or its parent

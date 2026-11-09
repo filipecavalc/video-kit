@@ -26,9 +26,9 @@ USER_MUSIC = USER / "music"
 
 
 def profile() -> dict:
-    """user/profile.json, or {} before the first-run setup."""
+    """user/profile.json, or {} before the first-run setup (a BOM from Windows PowerShell is fine)."""
     f = USER / "profile.json"
-    return json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+    return json.loads(f.read_text(encoding="utf-8-sig")) if f.exists() else {}
 
 SAMPLE_RATE = 24000  # Kokoro and Qwen3-TTS both output 24 kHz (tts_qwen.py resamples otherwise)
 

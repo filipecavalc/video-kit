@@ -91,7 +91,7 @@ def main() -> None:
     if stray:  # the pre-0.4 layout kept recordings at the kit root
         print(f"warning: {', '.join(stray)} in {kit.KIT / 'voices' / 'raw'} are not read; move them to {raw}")
     tones_file = kit.USER_VOICES / "tones.json"
-    tones = json.loads(tones_file.read_text(encoding="utf-8")) if tones_file.exists() else {}
+    tones = json.loads(tones_file.read_text(encoding="utf-8-sig")) if tones_file.exists() else {}
     mine = tones.get(a.speaker, {})
     missing_text = [k for k, t in mine.items() if isinstance(t, dict) and not t.get("text")]
     if not files and not missing_text:

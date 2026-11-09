@@ -121,7 +121,7 @@ export const TerminalScene: React.FC<{ scene: Scene; theme: Theme }> = ({ scene,
             const typed = r.text.slice(0, Math.max(0, n));
             const typing = i === activeCmd;
             return (
-              <div key={i} style={{ whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+              <div key={i} style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
                 <span style={{ color: theme.accent, fontWeight: 700 }}>{prompt} </span>
                 {typed}
                 {typing ? caret(true) : i === lastVisible ? caret(false) : null}
@@ -151,7 +151,7 @@ export const TerminalScene: React.FC<{ scene: Scene; theme: Theme }> = ({ scene,
               key={i}
               style={{
                 whiteSpace: "pre-wrap",
-                wordBreak: "break-all",
+                overflowWrap: "anywhere",
                 color,
                 opacity: p,
                 transform: `translateY(${(1 - easeOut(p)) * 0.35}em)`,

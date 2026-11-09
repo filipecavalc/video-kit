@@ -28,7 +28,7 @@
       "chat": {
         "messages": [
           { "role": "user", "text": "Make a 25 second video explaining how this kit works." },
-          { "role": "assistant", "text": "Script written: five scenes, narration, a diagram and an end card." }
+          { "role": "assistant", "text": "Script written: four scenes, narration, a diagram and an end card." }
         ]
       },
       "say": "You describe the video. The script lists the scenes, what is said and what is shown.",

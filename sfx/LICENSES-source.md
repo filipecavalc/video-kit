@@ -1,5 +1,14 @@
 # Audio library licenses
 
+> **About this file.** The 20 sounds in `sfx/` were picked from the audio library of
+> [agent-video-editor](https://github.com/kmilo93sd/agent-video-editor) (MIT, Copyright (c) 2026 kmilo93sd),
+> and this is that library's license review, kept as it was published there so every source stays
+> traceable. It describes the whole upstream library (113 effects, 15 music tracks, its `catalog.json`,
+> `music/` and generator scripts); this repository ships only the 20 effects listed in `sfx/README.md`.
+> Thirteen come from Kenney and OpenGameArt; whoosh-soft, whoosh-short, whoosh-medium-1s, riser-short-2s,
+> swell-soft-3s, success-chime and check-mark are among the sounds upstream generated and dedicated to CC0.
+> All 20 are CC0 1.0.
+
 Everything in `sfx/` and `music/` is **CC0 1.0** (public domain dedication). It can be used in commercial and
 monetized videos, modified and redistributed inside a video, **with no attribution**. CC0 legal text:
 https://creativecommons.org/publicdomain/zero/1.0/

@@ -48,7 +48,7 @@
       "id": "terminal",
       "transition": "push",
       "terminal": {
-        "title": "PowerShell · video-kit",
+        "title": "cmd · video-kit",
         "prompt": ">",
         "lines": [
           {
@@ -73,19 +73,22 @@
               "  diff.wav",
               "[2/5] media and timing",
               "[3/5] voice track and captions",
-              "[4/5] timeline: 9 scenes, 41.0s",
+              "[4/5] timeline: 10 scenes, 71.4s",
               "[5/5] render"
             ],
             "for": 1.6,
             "cue": "narrates"
           },
           {
-            "out": "rendered {n} frames",
-            "count": 1230,
-            "color": "dim"
+            "out": "-> out/launch-video-4x5-preview.mp4",
+            "color": "green"
           },
           {
-            "out": "-> out/launch-video-4x5-preview.mp4",
+            "cmd": "vk qa launch-video"
+          },
+          {
+            "out": "ok    speech match    {n}% of the script heard in the final mix",
+            "count": 98,
             "color": "green"
           }
         ]
@@ -104,11 +107,11 @@
           },
           {
             "value": 10,
-            "label": "narration languages"
+            "label": "languages with your cloned voice"
           }
         ]
       },
-      "say": "Four formats from one build, in ten languages."
+      "say": "Four formats from one build, and your own voice in ten languages."
     },
     {
       "id": "pipeline",

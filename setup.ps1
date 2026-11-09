@@ -9,15 +9,24 @@
 #       -Music generate    ACE-Step soundtrack generation (~10 GB of weights on first use)
 #       -Music files       bring your own tracks (user/music/)
 #
-# Needs: Python 3.12 (C:\Python312 or -Python), Node.js 20+, uv, git. NVIDIA GPU for cloning and music.
+# Windows 10/11 only. Needs: Python 3.12 (found with the py launcher, or pass -Python), Node.js 20+, uv, git.
+# An NVIDIA GPU for music generation; voice cloning runs without one, slowly.
 param(
-    [string]$Python = "C:\Python312\python.exe",
+    [string]$Python = "",
     [ValidateSet("synthetic", "clone")][string]$Voice = "synthetic",
     [ValidateSet("generate", "files")][string]$Music = "generate",
     [switch]$Check
 )
 $ErrorActionPreference = "Stop"
 $Kit = $PSScriptRoot
+if (-not $Python) {
+    # python.org installs to %LOCALAPPDATA%\Programs\Python\Python312; the py launcher knows where it is.
+    $Python = "C:\Python312\python.exe"
+    if (Get-Command py -ErrorAction SilentlyContinue) {
+        $found = & py -3.12 -c "import sys; print(sys.executable)" 2>$null
+        if ($LASTEXITCODE -eq 0 -and $found) { $Python = "$found".Trim() }
+    }
+}
 $env:UV_CACHE_DIR = "$Kit\.uv-cache"
 # AVG (and similar) set SSLKEYLOGFILE to a device path that crashes standalone Pythons.
 Remove-Item Env:SSLKEYLOGFILE -ErrorAction SilentlyContinue
@@ -30,6 +39,13 @@ $Fonts = @{
     "JetBrainsMono.ttf" = "ofl/jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf"
 }
 
+# Native tools write progress to stderr; with "Stop", Windows PowerShell 5.1 would treat that as an error.
+function Native([scriptblock]$cmd) {
+    $prev = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+    try { & $cmd 2>&1 | ForEach-Object { "$_" } } finally { $ErrorActionPreference = $prev }
+    if ($LASTEXITCODE) { throw "command failed ($LASTEXITCODE): $cmd" }
+}
+function NodeMajor { if (Have node) { [int]((node --version) -replace '^v(\d+).*', '$1') } else { 0 } }
 function Step($msg) { Write-Host "`n== $msg" -ForegroundColor Cyan }
 function Have($cmd) { [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
 function Mark($ok, $what, $hint = "") {
@@ -39,13 +55,15 @@ function Mark($ok, $what, $hint = "") {
 if ($Check) {
     Step "video-kit check (read-only)"
     Mark (Test-Path $Python) "Python 3.12 at $Python" "-> python.org, or pass -Python"
-    Mark (Have node) "Node.js" "-> nodejs.org (LTS)"
+    Mark ((NodeMajor) -ge 20) "Node.js 20+" "-> nodejs.org (LTS)"
     Mark (Have uv) "uv" "-> docs.astral.sh/uv"
     Mark (Have git) "git" "-> git-scm.com"
     $gpu = if (Have nvidia-smi) { (nvidia-smi "--query-gpu=name,memory.total" "--format=csv,noheader") -join "; " } else { "" }
     Mark ([bool]$gpu) "NVIDIA GPU $gpu" "-> without one, only synthetic voice and file music are practical"
     Mark (Test-Path "$Kit\tools\ffmpeg\bin\ffmpeg.exe") "ffmpeg"
-    Mark (Test-Path "$Kit\remotion\node_modules\remotion") "Remotion"
+    Mark ((Test-Path "$Kit\remotion\node_modules\remotion") -and (Test-Path "$Kit\remotion\node_modules\@remotion\three")) "Remotion (with 3D)" "-> run setup again (npm install)"
+    Mark (@($Fonts.Keys | Where-Object { -not (Test-Path "$Kit\tools\fonts\$_") }).Count -eq 0) "fonts (tools/fonts)"
+    Mark (Test-Path "$Kit\tools\playwright") "browser for vk capture (Playwright Chromium)"
     Mark (Test-Path "$Kit\py\main\.venv") "main Python env (Kokoro, Whisper, Manim)"
     Mark (Test-Path "$Kit\py\qwen\.venv") "voice cloning env (Qwen3-TTS)  [only for -Voice clone]"
     if (Test-Path "$Kit\py\chatterbox\.venv") {
@@ -61,6 +79,7 @@ if ($Check) {
 Step "Checking prerequisites"
 if (-not (Test-Path $Python)) { throw "Python 3.12 not found at $Python (install from python.org or pass -Python)" }
 foreach ($c in "node", "uv", "git") { if (-not (Have $c)) { throw "$c not found. Run setup.ps1 -Check for links." } }
+if ((NodeMajor) -lt 20) { throw "Node.js 20 or newer is needed (found $(node --version))" }
 & $Python --version; node --version; uv --version
 
 Step "Your profile (user/)"
@@ -69,7 +88,8 @@ if (-not (Test-Path "$Kit\user\profile.json")) {
     $p = Get-Content "$Kit\user.example\profile.json" -Raw | ConvertFrom-Json
     $p.music = $Music
     if ($Voice -eq "clone") { $p.voice = [pscustomobject]@{ engine = "qwen"; tone = "narracao" } }
-    $p | ConvertTo-Json -Depth 5 | Set-Content "$Kit\user\profile.json" -Encoding utf8
+    # UTF-8 without a BOM (Windows PowerShell 5.1's -Encoding utf8 would add one)
+    [IO.File]::WriteAllText("$Kit\user\profile.json", ($p | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding $false))
     Copy-Item "$Kit\user.example\voices\tones.json" "$Kit\user\voices\tones.json"
     "created user/profile.json (edit name, brand and voice there)"
 } else { "user/profile.json already exists, left as is" }
@@ -96,6 +116,12 @@ Push-Location "$Kit\remotion"; npm install --no-fund --no-audit; Pop-Location
 Step "Python: synthetic voice (Kokoro), captions (Whisper), diagrams (Manim), QA"
 Push-Location "$Kit\py\main"; uv sync --system-certs --python $Python; Pop-Location
 
+Step "Browser for vk capture (Playwright Chromium, into tools/playwright)"
+if (-not (Test-Path "$Kit\tools\playwright")) {
+    $env:PLAYWRIGHT_BROWSERS_PATH = "$Kit\tools\playwright"
+    Native { & "$Kit\py\main\.venv\Scripts\python.exe" -m playwright install chromium }
+} else { "already installed" }
+
 if ($Voice -eq "clone") {
     Step "Python: voice cloning (Qwen3-TTS)"
     Push-Location "$Kit\py\qwen"; uv sync --system-certs --python $Python; Pop-Location
@@ -106,8 +132,9 @@ if ($Voice -eq "clone") {
 if ($Music -eq "generate") {
     Step "Music: ACE-Step 1.5 at $($AceCommit.Substring(0,7))"
     $ace = "$Kit\tools\ACE-Step-1.5"
-    if (-not (Test-Path "$ace\.git")) { git clone https://github.com/ace-step/ACE-Step-1.5.git $ace }
-    git -C $ace fetch --depth 1 origin $AceCommit 2>$null; git -C $ace checkout --quiet $AceCommit
+    if (-not (Test-Path "$ace\.git")) { Native { git clone https://github.com/ace-step/ACE-Step-1.5.git $ace } }
+    Native { git -C $ace fetch --depth 1 origin $AceCommit }
+    Native { git -C $ace checkout --quiet $AceCommit }
     Push-Location $ace
     if (-not (Test-Path ".venv")) { uv venv --python $Python }
     uv sync --system-certs --python $Python
@@ -117,4 +144,5 @@ if ($Music -eq "generate") {
 
 Step "Smoke test"
 & "$Kit\py\main\.venv\Scripts\python.exe" -c "import torch, kokoro, whisper, manim; print('main env ok, cuda =', torch.cuda.is_available())"
-Write-Host "`nDone. Try it: vk build example --preview   (then vk sheet example --preview)" -ForegroundColor Green
+Write-Host "`nDone. Try it: .\vk build example --preview   (then .\vk sheet example --preview)" -ForegroundColor Green
+if ($Music -ne "generate") { Write-Host "Without music generation the examples render without a soundtrack (put your own in user/music/)." }

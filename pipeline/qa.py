@@ -64,7 +64,7 @@ def still_stretches(video: Path, sample_fps: int = 5, threshold: float = 1.5) ->
 
 
 def run_qa(root: Path, fmt: str | None, preview: bool) -> int:
-    spec =json.loads((root / "script.json").read_text(encoding="utf-8"))
+    spec =json.loads((root / "script.json").read_text(encoding="utf-8-sig"))
     if not fmt:
         f = spec.get("format", "4x5")
         fmt = f if isinstance(f, str) else f[0]
@@ -72,7 +72,7 @@ def run_qa(root: Path, fmt: str | None, preview: bool) -> int:
     tl_file = root / "build" / f"timeline-{fmt}.json"
     if not video.exists() or not tl_file.exists():
         raise SystemExit(f"Render first: vk build {root.name} --format {fmt}{' --preview' if preview else ''}")
-    tl = json.loads(tl_file.read_text(encoding="utf-8"))
+    tl = json.loads(tl_file.read_text(encoding="utf-8-sig"))
     fps = tl["fps"]
     rows: list[tuple[str, str, str]] = []  # (level, check, detail)
 
@@ -161,7 +161,7 @@ def run_qa(root: Path, fmt: str | None, preview: bool) -> int:
     # pace per narrated scene, from the caption words
     wf = root / "build" / "words.json"
     if wf.exists():
-        words = json.loads(wf.read_text(encoding="utf-8"))
+        words = json.loads(wf.read_text(encoding="utf-8-sig"))
         fast, slow = [], []
         for sc in tl["scenes"]:
             a, b = sc["from"] / fps, (sc["from"] + sc["duration"]) / fps

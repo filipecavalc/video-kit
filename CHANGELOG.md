@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.6.2 (2026-11-09)
+
+Fixes from a review of the public repository, for people installing it from scratch.
+
+- Setup: `user/profile.json` is written without a BOM (Windows PowerShell 5.1 added one, and every `vk`
+  command then failed to read it); JSON files are read BOM-tolerant anyway. Fetching ACE-Step no longer
+  aborts setup when git writes progress to stderr. Python 3.12 is found with the `py` launcher (python.org
+  installs it under `%LOCALAPPDATA%`). Node.js 20+ is checked. Playwright's Chromium is installed into
+  `tools/playwright` for `vk capture`. `-Check` reports the 3D packages, fonts and the browser.
+- Music generation that is not available (no ACE-Step, or no NVIDIA GPU) no longer stops the build: it uses
+  `music.file` when the script gives one, otherwise it renders without music, with a note. The examples
+  now render on any machine.
+- A git history scene without history to read (a downloaded zip has no `.git`) becomes a title instead of
+  failing the build.
+- `vk check` looks for every file the build reads (kinetic media and logos, 3D models, code files, events,
+  Manim files, music files, files in `user/`) and says when music generation is not available.
+- Docs: Windows 10/11 only, said plainly; `.k` in PowerShell; "on your own machine, with no paid APIs"
+  instead of "for free", with what setup downloads; which keys apply to which scenes (`headline` only over
+  media, chips not on cards or chat); undocumented keys documented (`fps`, `whisper`, `align`, `auto_sfx`,
+  `leak.hue`, the `music.generate` options); full `vk --help`; transitions list; Manim renders at the
+  first format's size. LICENSE is the plain MIT text (GitHub detects it); the notes moved to a README
+  section, with the missing credits (PyMuPDF, AGPL-3.0; three.js and React Three Fiber; the fonts; the
+  sounds generated upstream) and the origin of the example assets. `sfx/LICENSES-source.md` says what it
+  is: the upstream library's review, of which 20 sounds ship here.
+- Examples say only what is true (four scenes, the real `vk qa` line, languages with the cloned voice).
+- Terminal lines wrap between words instead of inside them.
+- Versions in `package.json` and `pyproject.toml` follow the changelog.
+
 ## 0.6.1 (2026-11-09)
 
 - Diagram nodes are as wide as their text (one line each, within the room their row leaves); text that

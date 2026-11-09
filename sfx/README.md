@@ -20,4 +20,4 @@ Not used on purpose: Remotion's `remotion.media` sounds. Their pages credit Free
 | swell-soft-3s, riser-short-2s | build-up before a reveal |
 
 In script.json: `"sfx": [{"name": "page-turn", "cue": "cutting"}]` on a scene, or `"at": 1.2` seconds
-from the scene start. Transitions `slide`/`wipe` add a whoosh automatically unless `"auto_sfx": false`.
+from the scene start. Transitions `slide`, `wipe`, `push`, `through` and `flip` add a whoosh automatically unless `"auto_sfx": false`.
