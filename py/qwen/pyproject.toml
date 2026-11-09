@@ -1,6 +1,6 @@
 [project]
 name = "video-kit-qwen"
-version = "0.6.2"
+version = "0.6.3"
 description = "Voice cloning narration (Qwen3-TTS) for the video kit"
 requires-python = ">=3.11,<3.13"
 dependencies = [

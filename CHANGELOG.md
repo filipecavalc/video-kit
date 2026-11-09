@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.3 (2026-11-09)
+
+- README shows what the kit makes: an animated montage, a script.json scene next to the scene it renders,
+  a gallery with a clip of every scene type, and the same frame in 16:9 and 4:5. The clips are animated
+  WebP in `docs/media/` (about 3 MB), cut from `projects/example-dev`.
+
 ## 0.6.2 (2026-11-09)
 
 Fixes from a review of the public repository, for people installing it from scratch.

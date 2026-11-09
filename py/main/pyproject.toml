@@ -1,6 +1,6 @@
 [project]
 name = "video-kit-main"
-version = "0.6.2"
+version = "0.6.3"
 description = "Narration (Kokoro), captions (Whisper) and Manim for the video kit"
 requires-python = ">=3.12,<3.13"
 dependencies = [
